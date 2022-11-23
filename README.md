@@ -1,2 +1,2 @@
-# drawio-to-openapi
+# drawio-uml
 # Drawio (UML) Converter VSCode Extension
