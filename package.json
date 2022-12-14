@@ -1,8 +1,8 @@
 {
-  "name": "drawio-uml",
-  "displayName": "drawio-uml",
-  "description": "UML Conversion Tools for Drawio",
-  "version": "0.0.1",
+  "name": "uml-tools",
+  "displayName": "uml-tools",
+  "description": "UML Conversion Tools for VSCode",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.73.0"
   },
@@ -10,18 +10,22 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:drawio-uml.welcome"
+    "onCommand:uml-tools.welcome"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "drawio-uml.welcome",
-        "title": "Drawio-UML:Welcome"
+        "command": "uml-tools.welcome",
+        "title": "uml-tools:Welcome"
       },
       {
-        "command": "drawio-uml.convert",
-        "title": "Drawio-UML:Convert to OpenApi"
+        "command": "uml-tools.convert",
+        "title": "uml-tools:Convert to UML-Json"
+      },
+      {
+        "command": "uml-tools.generate",
+        "title": "uml-tools:Convert to UML-Json"
       }
     ]
   },

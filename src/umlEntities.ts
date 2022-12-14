@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 /**
  * Stereotypes for UML definitions
  */
@@ -9,7 +11,8 @@ export enum UmlStereotype {
     ENUMERATION = "enumeration",
     PACKAGE = "package",
     ATTRIBUTE = "attribute", 
-    METHOD = "method"
+    METHOD = "method",
+    MODEL = "model"
 }
 
 export enum UmlElement {
@@ -18,21 +21,79 @@ export enum UmlElement {
     METHODS
 }
 /**
+ * Base class for all UML entities 
+ * 
+ */
+export class BaseEntity {
+    name: string;
+    id: string;
+    /**
+     * Default contstructor
+     * @param id (optional) id of the entity - a random UUID is assigned if not passed
+     * @param name (optional) name of the entity
+     */
+    constructor(id?: string, name?: string) {
+        this.id = id?id:randomUUID();  
+        this.name = name?name:"";
+    }
+
+}
+/**
  * Superclass for all definitions
  */
-export class BaseDefinition {
-    name: string = "";
-    id: string = "";
+export class BaseDefinition extends BaseEntity {
     stereotype: UmlStereotype = null as unknown as UmlStereotype;
     parent: string = "";
+    constructor() {
+        super();
+    }
 }
 
 /**
- * The a meta class to describe a class
+ * Meta class to describe a Model 
+ */
+export class ModelDefinition extends BaseDefinition {
+    classes: Array<ClassDefinition> ; 
+    interfaces: Array<InterfaceDefinition>;
+    package: PackageDefinition;
+    constructor() {
+        super(); 
+        this.stereotype = UmlStereotype.MODEL; 
+        this.classes = new Array();
+        this.interfaces = new Array();
+        this.package = undefined as unknown as PackageDefinition;
+    }
+}
+/**
+ * Interface for all UmlConvertors
+ */
+export interface Converter {
+    convert(document: string, name: string): ModelDefinition; 
+}
+
+/**
+ * Interface for a UML generator 
+ */
+export interface Generator {
+
+    generate(command: Command): string; 
+
+}
+export class Command extends BaseEntity {
+    definition?: BaseDefinition;
+    generator?: Generator;
+    converter?: Converter;  
+    template?:string;
+    constructor() {
+        super();
+    }
+}
+/**
+ * The meta class to describe a class
  */
  export class InterfaceDefinition extends BaseDefinition{
     methods:Array<MethodDefinition> = new Array();
-    superClass: ClassDefinition = undefined as unknown as ClassDefinition;
+    superClass?: ClassDefinition;
     constructor() {
         super(); 
         this.stereotype = UmlStereotype.INTERFACE; 
@@ -43,13 +104,16 @@ export class BaseDefinition {
  */
 export class ClassDefinition extends InterfaceDefinition{
     attributes:Array<AttributeDefinition> = new Array();
-    superClass: ClassDefinition = undefined as unknown as ClassDefinition;
+    superClass?: ClassDefinition;
+    implementations?: Array<ImplemenationDefinition>; 
     constructor() {
         super(); 
         this.stereotype = UmlStereotype.CLASS; 
     }
 }
-
+/**
+ * A package definition
+ */
 export class PackageDefinition extends BaseDefinition {
     constructor() {
         super(); 
@@ -58,7 +122,7 @@ export class PackageDefinition extends BaseDefinition {
 }
 
 /**
- * The a meta class to describe a field
+ * The a definition class to describe an Attribute
  */
 export class AttributeDefinition extends BaseDefinition{
     type: string = "";
@@ -107,14 +171,4 @@ export class AssociationDefinition extends BaseDefinition{
     }
  }
 
- /**
-  * 
-  */
- export class UmlGliffyItem {
-    id: string = ""; 
-    uid: string = "";
-    stereotype: UmlStereotype = null as unknown as UmlStereotype; 
-    texts: Array<string>  = new Array<string>();
-    children: Map<UmlElement, Array<UmlGliffyItem>> = new Map<UmlElement, Array<UmlGliffyItem>>(); 
-    source: any;
- }
+ 

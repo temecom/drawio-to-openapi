@@ -12,19 +12,27 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "drawio-uml" is now active!');
+	console.log('Congratulations, your extension "uml-tools" is now active!');
 
 	// Welcome Message
-	let disposable = vscode.commands.registerCommand('drawio-uml.welcome', () => {
-		vscode.window.showInformationMessage('Welcome to drawio-uml!');
+	let disposable = vscode.commands.registerCommand('uml-tools.welcome', () => {
+		vscode.window.showInformationMessage('Welcome to VS UML Tools!');
 	});
 	context.subscriptions.push(disposable);
 
 	// File conversion
-	disposable = vscode.commands.registerCommand('drawio-uml.convert', () => {
+	disposable = vscode.commands.registerCommand('uml-tools.convert', () => {
 		
 		var converter:umlConverter.UmlConverter = new umlConverter.UmlConverter(); 
-		converter.convert(); 
+		converter.convert(context); 
+	});
+	context.subscriptions.push(disposable);
+
+	// File conversion
+	disposable = vscode.commands.registerCommand('uml-tools.generate', () => {
+	
+		var converter:umlConverter.UmlConverter = new umlConverter.UmlConverter(); 
+		converter.generate(context); 
 	});
 	context.subscriptions.push(disposable);
 

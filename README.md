@@ -1,6 +1,6 @@
-# drawio-uml README
+# uml-tools README
 
-This is the README for your extension "drawio-uml". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "uml-tools". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 
