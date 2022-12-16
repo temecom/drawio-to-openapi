@@ -69,7 +69,7 @@ export class UmlConverter {
             var model: uml.ModelDefinition = JSON.parse(document.getText()) as uml.ModelDefinition;
             var generator: uml.Generator = new java.UmlJavaGenerator();
             this.readTemplate(context, "classTemplate.java").then(template => {
-                model.classes.every((classDefinition) => {
+                model.classes.forEach(classDefinition => {
                     // Create the command wrapper class
                     var command: uml.Command = new uml.Command();
                     command.template = template;
@@ -79,7 +79,9 @@ export class UmlConverter {
                     }
                     command.definition = classDefinition;
                     var code: string = generator.generate(command);
-                    this.writeFile(context, classDefinition.name, "java", code);
+                    this.writeFile(context, classDefinition.name, "java", code).then(editor => {
+                        console.debug("Success"); 
+                    });
                 });
             });
         } catch (e) {
@@ -90,6 +92,10 @@ export class UmlConverter {
             console.error("No editor open");
             vscode.window.showWarningMessage("Please open a valid UML json file");
         }
+
+        vscode.window.showInformationMessage('Files generated Successfully!').then(v => {
+            console.debug("Completed Code Generation"); 
+        });
     }
 
     /**
@@ -108,14 +114,14 @@ export class UmlConverter {
         });
     }
 
-    writeFile(context: vscode.ExtensionContext, name: string, extension: string, content: string): void {
+    writeFile(context: vscode.ExtensionContext, name: string, extension: string, content: string): Thenable<vscode.TextEditor> {
         var baseUmlUri: vscode.Uri = vscode.Uri.from({ scheme: "file", path: context.asAbsolutePath("generated") });
         var fileUri = vscode.Uri.joinPath(baseUmlUri, extension, name + "." + extension);
-        vscode.workspace.fs.writeFile(fileUri, Buffer.from(content)).then(f => {
-            vscode.workspace.fs.stat(fileUri).then(fileStat => {
+        return vscode.workspace.fs.writeFile(fileUri, Buffer.from(content)).then(f => {
+            return vscode.workspace.fs.stat(fileUri).then(fileStat => {
                 console.debug("Saved file to " + fileUri.path);
-                vscode.workspace.openTextDocument(fileUri).then(document => {
-                    vscode.window.showTextDocument(document);
+                return vscode.workspace.openTextDocument(fileUri).then(document => {
+                    return vscode.window.showTextDocument(document);
                 });
             });
         });

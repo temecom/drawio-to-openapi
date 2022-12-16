@@ -36,6 +36,6 @@ export class UmlJavaGenerator implements uml.Generator {
             // Generate with the context
             code = compiledTemplate(context); 
         }
-         return code;
+        return code;
     }
 }
