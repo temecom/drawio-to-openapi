@@ -64,11 +64,15 @@ export class UmlConverter {
             const document = editor.document;
             var model: uml.ModelDefinition = JSON.parse(document.getText()) as uml.ModelDefinition;
             var generator: uml.Generator = new java.UmlJavaGenerator();
-            var templates = new Map<string, string>();
-            this.readTemplate(context, "classTemplate.java").then(t => {
+            this.readTemplate(context, "classTemplate.java").then(template => {
                 model.classes.every((classDefinition) => {
+                    // Create the command wrapper class
                     var command: uml.Command = new uml.Command();
-                    command.template = t;
+                    command.template = template;
+                    if(!classDefinition.package) {
+                        // Assign a default package if there is none defined 
+                        classDefinition.package=model.defaultPackage; 
+                    }
                     command.definition = classDefinition;
                     var code: string = generator.generate(command);
                     this.writeFile(context, classDefinition.name, "java",code);
@@ -98,7 +102,7 @@ export class UmlConverter {
     writeFile(context: vscode.ExtensionContext, name: string,  extension: string, content:string): void {
         var baseUmlUri: vscode.Uri = vscode.Uri.from({ scheme: "file", path: context.asAbsolutePath("generated") });
         var fileUri = vscode.Uri.joinPath(baseUmlUri, extension, name + "." + extension); 
-        vscode.workspace.fs.writeFile(fileUri, Buffer.from(JSON.stringify(content))).then(f => {
+        vscode.workspace.fs.writeFile(fileUri, Buffer.from(content)).then(f => {
             vscode.workspace.fs.stat(fileUri).then(fileStat => {
                 console.log("Saved file to " + fileUri.path);
                 vscode.workspace.openTextDocument(fileUri).then(document => {

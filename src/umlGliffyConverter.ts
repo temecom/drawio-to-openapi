@@ -13,11 +13,13 @@ const GLIFFY_UID_PATTERN: RegExp = /com.gliffy.shape.uml.uml_v2.class.(\w*)/i;
 const classPattern: RegExp = /<mxCell\s?id="(\d*)"\s?value=".*(class|interface|enum)&amp;gt;&amp;gt;&lt;br&gt;&lt;b&gt;(\w*).*parent="(\d*)"/i;
 const fieldPattern: RegExp = /<mxCell\s?id="(\d*)"\s?value="(\w*):\s?(\w*).*parent="(\d*)"/i;
 const GLIFFY_STEREOTYPE_PATTERN: RegExp = /"><<(\w*)>></g;
-const GLIFFY_CLASS_NAME_PATTERN: RegExp = /">(\w*)</g;
+const GLIFFY_CLASS_NAME_PATTERN: RegExp = /">([a-zA-Z0-9.]*)</g;
 const GLIFFY_ATTRIBUTES_PATTERN: RegExp = />(\w*:\s?\w*)</g;
 const GLIFFY_ATTRIBUTE_PATTERN: RegExp = /(\w*):\s?(\w*)/i;
 const GLIFFY_METHODS_PATTERN: RegExp = />(\w*\(\):\s?\w*)</g;
 const GLIFFY_METHOD_PATTERN: RegExp = /(\w*\(\)):\s?(\w*)/i;
+const GLIFFY_PACKAGES_PATTERN: RegExp = />(\w*\(\):\s?\w*)</g;
+const GLIFFY_PACKAGE_PATTERN: RegExp = /(\w*\(\)):\s?(\w*)/i;
 const GLIFFY_TEXT_GROUP_PATTERN: RegExp = />(\w*|w*:\s?\w*)</g;
 const UID_GENERALIZATION: string = 'com.gliffy.shape.uml.uml_v2.class.generalization';
 const UID_CLASS: string = 'com.gliffy.shape.uml.uml_v2.class.class';
@@ -26,14 +28,14 @@ const UID_INTERFACE: string = 'com.gliffy.shape.uml.uml_v2.class.interface';
 /**
   * 
   */
- export class UmlGliffyItem {
-    id: string = ""; 
+export class UmlGliffyItem {
+    id: string = "";
     uid: string = "";
-    stereotype: uml.UmlStereotype = null as unknown as uml.UmlStereotype; 
-    texts: Array<string>  = new Array<string>();
-    children: Map<uml.UmlElement, Array<UmlGliffyItem>> = new Map<uml.UmlElement, Array<UmlGliffyItem>>(); 
+    stereotype: uml.UmlStereotype = null as unknown as uml.UmlStereotype;
+    texts: Array<string> = new Array<string>();
+    children: Map<uml.UmlElement, Array<UmlGliffyItem>> = new Map<uml.UmlElement, Array<UmlGliffyItem>>();
     source: any;
- }
+}
 /**
  * A class to convert a Gliffy UML Document in '.gliffy' json form to a neutral UMLDefinition set
  */
@@ -51,7 +53,7 @@ export class UmlConverter implements uml.Converter {
      */
     convert(document: string, name: string): uml.ModelDefinition {
         var model: uml.ModelDefinition = new uml.ModelDefinition();
-        model.name = name; 
+        model.name = name;
         var jsonDocument = JSON.parse(document);
         Object.entries(jsonDocument).map(entry => {
             console.log(entry);
@@ -66,14 +68,19 @@ export class UmlConverter implements uml.Converter {
                         case uml.UmlStereotype.IMPLEMENTS:
                             break;
                         case uml.UmlStereotype.CLASS:
-                            var classDefinition:uml.ClassDefinition = this.createClass(umlGliffyItem);
-                            model.classes.push(classDefinition);
+                            var classDefinition: uml.ClassDefinition = this.createClass(umlGliffyItem);
+                            model.addClass(classDefinition);
                             console.log(classDefinition);
                             break;
                         case uml.UmlStereotype.INTERFACE:
                             var interfaceDefinition: uml.InterfaceDefinition = this.createInterface(umlGliffyItem);
-                            model.interfaces.push(interfaceDefinition);
+                            model.addInterface(interfaceDefinition);
                             console.log(interfaceDefinition);
+                            break;
+                        case uml.UmlStereotype.PACKAGE:
+                            var packageDefinition: uml.PackageDefinition = this.createPackage(umlGliffyItem);
+                            model.addPackage(packageDefinition);
+                            console.log(packageDefinition);
                             break;
                         default:
                             // Just log
@@ -82,6 +89,10 @@ export class UmlConverter implements uml.Converter {
                 });
             }
         });
+        if (model.packages.length===1) {
+            // Only one package use as default
+            model.defaultPackage = model.packages[0];
+        }
         return model;
     }
     /**
@@ -89,8 +100,8 @@ export class UmlConverter implements uml.Converter {
      * @param item the json object to parse
      * @returns a partially instanciated 
      */
-    parseGliffyItem(item: any): UmlGliffyItem{
-        var umlGliffyItem: UmlGliffyItem= new UmlGliffyItem;
+    parseGliffyItem(item: any): UmlGliffyItem {
+        var umlGliffyItem: UmlGliffyItem = new UmlGliffyItem;
         umlGliffyItem.id = item["id"];
         umlGliffyItem.stereotype = this.locateStereotype(item);
         umlGliffyItem.source = item;
@@ -107,7 +118,6 @@ export class UmlConverter implements uml.Converter {
         var source: any = umlGliffyItem.source;
         var children: Array<any> = source["children"];
         classDefinition.id = umlGliffyItem.id;
-        classDefinition.stereotype = this.locateStereotype(source);
         classDefinition.name = this.findName(source);
         classDefinition.attributes = this.findAttributes(children[uml.UmlElement.ATTRIBUTES]);
         classDefinition.methods = this.findMethods(children[uml.UmlElement.METHODS]);
@@ -124,13 +134,25 @@ export class UmlConverter implements uml.Converter {
         var source: any = umlGliffyItem.source;
         var children: Array<any> = source["children"];
         interfaceDefinition.id = umlGliffyItem.id;
-        interfaceDefinition.stereotype = this.locateStereotype(source);
         interfaceDefinition.name = this.findName(source);
-        interfaceDefinition.stereotype = this.locateStereotype(umlGliffyItem.source);
         interfaceDefinition.methods = this.findMethods(children[uml.UmlElement.METHODS]);
         return interfaceDefinition;
     }
 
+    /**
+     * Create a package from the Gliffy item
+     * @param umlGliffyItem the Gliffy Item
+     * @returns packageDefinition
+     */
+    createPackage(umlGliffyItem: UmlGliffyItem): uml.PackageDefinition {
+
+        var packageDefinition: uml.PackageDefinition = new uml.PackageDefinition();
+        var source: any = umlGliffyItem.source;
+        var children: Array<any> = source["children"];
+        packageDefinition.id = umlGliffyItem.id;
+        packageDefinition.name = this.findName(source);
+        return packageDefinition;
+    }
     /**
      * Locate the sterotype - last segement of the uid eg: 
      * class
@@ -165,7 +187,7 @@ export class UmlConverter implements uml.Converter {
                 method.id = randomUUID();
                 method.name = matches[1];
                 method.type = matches[2];
-                method.stereotype = uml.UmlStereotype.METHOD; 
+                method.stereotype = uml.UmlStereotype.METHOD;
                 methods.push(method);
             }
         });
@@ -187,12 +209,14 @@ export class UmlConverter implements uml.Converter {
             if (matches) {
                 attribute.name = matches[1];
                 attribute.type = matches[2];
-                attribute.stereotype = uml.UmlStereotype.ATTRIBUTE; 
+                attribute.stereotype = uml.UmlStereotype.ATTRIBUTE;
             }
             attributes.push(attribute);
         });
         return attributes;
     }
+
+
 
     /**
      * Convenience method to find the name in a Gliffy element
@@ -214,7 +238,7 @@ export class UmlConverter implements uml.Converter {
     findText(item: any, pattern: RegExp): string {
         var text: string = '';
         var texts: Array<string> = this.findTexts(item, pattern);
-        if (texts && texts.length > 1) {
+        if (texts && texts.length > 0) {
             text = texts[texts.length - 1];
         }
         return text;
@@ -245,7 +269,9 @@ export class UmlConverter implements uml.Converter {
                         if (matches) {
                             for (let match of matches) {
                                 text = match[1];
-                                texts.push(text);
+                                if (text && text.length > 0) {
+                                    texts.push(text);
+                                }
                             };
                         }
                     }

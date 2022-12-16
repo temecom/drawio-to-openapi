@@ -20,6 +20,20 @@ export enum UmlElement {
     ATTRIBUTES,
     METHODS
 }
+
+/**
+ * Modifiers used to change the template parsing behavior
+ * These are prefixed with '@' in the template keys
+ */
+
+export enum TemplateModifier {
+    OPTIONAL = "optional",
+    ITERATATION_BLOCK = "iterate",
+    ITERATE_BLOCK = "iterateBlock",
+    ITERATION_BLOCK_END = "endBlock",
+    OPTIONAL_BLOCK = "OPTIONAL_BLOCK",
+    OPTIONAL_BLOCK_END = "END_OPTIONAL_BLOCK"
+}
 /**
  * Base class for all UML entities 
  * 
@@ -55,13 +69,26 @@ export class BaseDefinition extends BaseEntity {
 export class ModelDefinition extends BaseDefinition {
     classes: Array<ClassDefinition> ; 
     interfaces: Array<InterfaceDefinition>;
-    package: PackageDefinition;
+    packages: Array<PackageDefinition>;
+    defaultPackage?: PackageDefinition; 
     constructor() {
         super(); 
         this.stereotype = UmlStereotype.MODEL; 
         this.classes = new Array();
         this.interfaces = new Array();
-        this.package = undefined as unknown as PackageDefinition;
+        this.packages = new Array(); 
+    }
+
+    addClass(classDefinition:ClassDefinition) {
+        this.classes.push(classDefinition); 
+    }
+
+    addInterface(interfaceDefinition: InterfaceDefinition) {
+        this.interfaces.push(interfaceDefinition); 
+    }
+
+    addPackage(packageDefinition: PackageDefinition) {
+        this.packages?.push(packageDefinition); 
     }
 }
 /**
@@ -84,6 +111,7 @@ export class Command extends BaseEntity {
     generator?: Generator;
     converter?: Converter;  
     template?:string;
+    package: PackageDefinition | undefined;
     constructor() {
         super();
     }
@@ -106,6 +134,7 @@ export class ClassDefinition extends InterfaceDefinition{
     attributes:Array<AttributeDefinition> = new Array();
     superClass?: ClassDefinition;
     implementations?: Array<ImplemenationDefinition>; 
+    package?: PackageDefinition;
     constructor() {
         super(); 
         this.stereotype = UmlStereotype.CLASS; 
@@ -118,6 +147,17 @@ export class PackageDefinition extends BaseDefinition {
     constructor() {
         super(); 
         this.stereotype = UmlStereotype.PACKAGE; 
+    }
+}
+
+
+/**
+ * A package definition
+ */
+export class EnumerationDefinition extends BaseDefinition {
+    constructor() {
+        super(); 
+        this.stereotype = UmlStereotype.ENUMERATION; 
     }
 }
 
