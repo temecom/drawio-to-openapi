@@ -56,12 +56,12 @@ export class UmlConverter implements uml.Converter {
         model.name = name;
         var jsonDocument = JSON.parse(document);
         Object.entries(jsonDocument).map(entry => {
-            console.log(entry);
+            console.debug(entry);
             if (entry[0] === "stage") {
                 // Get the UML objects
                 var stage: any = entry[1];
                 var umlItems: Array<any> = stage['objects'] as Array<any>;
-                console.log("Found:")
+                console.debug("Found:")
                 umlItems.map(item => {
                     var umlGliffyItem: UmlGliffyItem = this.parseGliffyItem(item);
                     switch (umlGliffyItem.stereotype) {
@@ -70,21 +70,21 @@ export class UmlConverter implements uml.Converter {
                         case uml.UmlStereotype.CLASS:
                             var classDefinition: uml.ClassDefinition = this.createClass(umlGliffyItem);
                             model.addClass(classDefinition);
-                            console.log(classDefinition);
+                            console.debug(classDefinition);
                             break;
                         case uml.UmlStereotype.INTERFACE:
                             var interfaceDefinition: uml.InterfaceDefinition = this.createInterface(umlGliffyItem);
                             model.addInterface(interfaceDefinition);
-                            console.log(interfaceDefinition);
+                            console.debug(interfaceDefinition);
                             break;
                         case uml.UmlStereotype.PACKAGE:
                             var packageDefinition: uml.PackageDefinition = this.createPackage(umlGliffyItem);
                             model.addPackage(packageDefinition);
-                            console.log(packageDefinition);
+                            console.debug(packageDefinition);
                             break;
                         default:
                             // Just log
-                            console.log(item);
+                            console.debug(item);
                     }
                 });
             }

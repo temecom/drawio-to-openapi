@@ -26,28 +26,31 @@ export class UmlConverter {
         const editor = vscode.window.activeTextEditor;
 
         if (editor) {
+            try {
+                //TODO:  Only one converter do far - add optional converter selection
+                var converter: uml.Converter = new gliffy.UmlConverter();
+                const document = editor.document;
+                var fileNameSegments = document.fileName.split(".")[0].split("/");
+                var name = fileNameSegments[fileNameSegments.length - 1];
+                var model: uml.ModelDefinition = converter.convert(document.getText(), name);
+                //TODO: use file selector
+                var baseUmlUri: vscode.Uri = vscode.Uri.from({ scheme: "file", path: context.asAbsolutePath("generated/uml") });
+                var fileUri = vscode.Uri.joinPath(baseUmlUri, name + ".json")
+                vscode.workspace.fs.writeFile(fileUri, Buffer.from(JSON.stringify(model))).then(file => {
 
-            //TODO:  Only one converter do far - add optional converter selection
-            var converter: uml.Converter = new gliffy.UmlConverter();
-            const document = editor.document;
-            var fileNameSegments = document.fileName.split(".")[0].split("/");
-            var name = fileNameSegments[fileNameSegments.length - 1];
-            var model: uml.ModelDefinition = converter.convert(document.getText(), name);
-            //TODO: use file selector
-            var baseUmlUri: vscode.Uri = vscode.Uri.from({ scheme: "file", path: context.asAbsolutePath("generated/uml") });
-            var fileUri = vscode.Uri.joinPath(baseUmlUri, name + ".json")
-            vscode.workspace.fs.writeFile(fileUri, Buffer.from(JSON.stringify(model))).then(file => {
-
-                vscode.workspace.fs.stat(fileUri).then(fileStat => {
-                    console.log("Saved file to " + fileUri.path);
-                    vscode.workspace.openTextDocument(fileUri).then(document => {
-                        vscode.window.showTextDocument(document);
+                    vscode.workspace.fs.stat(fileUri).then(fileStat => {
+                        console.debug("Saved file to " + fileUri.path);
+                        vscode.workspace.openTextDocument(fileUri).then(document => {
+                            vscode.window.showTextDocument(document);
+                        });
                     });
                 });
+                console.debug("Converted: ");
+                console.debug(model);
 
-            });
-            console.log("Converted: ");
-            console.log(model);
+            } catch (e) {
+                console.error("Failed to import code", e);
+            }
         }
         vscode.window.showInformationMessage('File Converted Successfully!');
     }
@@ -61,6 +64,7 @@ export class UmlConverter {
         const editor = vscode.window.activeTextEditor;
 
         if (editor) {
+            try {
             const document = editor.document;
             var model: uml.ModelDefinition = JSON.parse(document.getText()) as uml.ModelDefinition;
             var generator: uml.Generator = new java.UmlJavaGenerator();
@@ -69,17 +73,22 @@ export class UmlConverter {
                     // Create the command wrapper class
                     var command: uml.Command = new uml.Command();
                     command.template = template;
-                    if(!classDefinition.package) {
+                    if (!classDefinition.package) {
                         // Assign a default package if there is none defined 
-                        classDefinition.package=model.defaultPackage; 
+                        classDefinition.package = model.defaultPackage;
                     }
                     command.definition = classDefinition;
                     var code: string = generator.generate(command);
-                    this.writeFile(context, classDefinition.name, "java",code);
+                    this.writeFile(context, classDefinition.name, "java", code);
                 });
             });
+        } catch (e) {
+                console.error("Failed to generate Java code %s", e); 
+                vscode.window.showErrorMessage("Failed to generate Java code");
+            }
         } else {
             console.error("No editor open");
+            vscode.window.showWarningMessage("Please open a valid UML json file");
         }
     }
 
@@ -99,17 +108,17 @@ export class UmlConverter {
         });
     }
 
-    writeFile(context: vscode.ExtensionContext, name: string,  extension: string, content:string): void {
+    writeFile(context: vscode.ExtensionContext, name: string, extension: string, content: string): void {
         var baseUmlUri: vscode.Uri = vscode.Uri.from({ scheme: "file", path: context.asAbsolutePath("generated") });
-        var fileUri = vscode.Uri.joinPath(baseUmlUri, extension, name + "." + extension); 
+        var fileUri = vscode.Uri.joinPath(baseUmlUri, extension, name + "." + extension);
         vscode.workspace.fs.writeFile(fileUri, Buffer.from(content)).then(f => {
             vscode.workspace.fs.stat(fileUri).then(fileStat => {
-                console.log("Saved file to " + fileUri.path);
+                console.debug("Saved file to " + fileUri.path);
                 vscode.workspace.openTextDocument(fileUri).then(document => {
                     vscode.window.showTextDocument(document);
                 });
             });
-        }); 
+        });
     }
 
 }
