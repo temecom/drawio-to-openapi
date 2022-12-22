@@ -2,7 +2,9 @@
 
 A collection of utilities to import models from UML design tools into a common JSON form in VSCode and then generate code for various target languages and frameworks. The use of Handlebars templating provides for extensive customization and extension to support many different output formats. Currently supported UML design tool imports are: 
 
-* Gliffy (Confluence) documents
+* Gliffy (Confluence) documents eg: 
+![uml-tools image](https://github.com/temecom/vscode-uml-tools/blob/main/images/MarketingModel.png)
+
 * drawio UML diagrams (in progress) 
 
 ## Features
@@ -11,7 +13,6 @@ A collection of utilities to import models from UML design tools into a common J
 * Template driven code generation using Handlebars library
 * Conversion job configuration provides batched, repeatable operations to multiple targets
 
-![uml-tools image](https://github.com/temecom/vscode-uml-tools/blob/main/images/MarketingModel.png)
 
 
 ## Requirements
