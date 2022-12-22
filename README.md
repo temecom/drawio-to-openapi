@@ -11,7 +11,7 @@ A collection of utilities to import models from UML design tools into a common J
 * Template driven code generation using Handlebars library
 * Conversion job configuration provides batched, repeatable operations to multiple targets
 
-\!\[uml-tools image\]\(image https://github.com/temecom/vscode-uml-tools/blob/main/images/MarketingModel.png\)
+![uml-tools image](https://github.com/temecom/vscode-uml-tools/blob/main/images/MarketingModel.png)
 
 
 ## Requirements
