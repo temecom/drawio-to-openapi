@@ -42,12 +42,9 @@ Users appreciate release notes as you update your extension.
 
 ### 0.1.0
 
-Initial release of ...
+Pre-Release
 
-### 0.1.0
-Basic Functionality
-
-Completed issue #.DU-001-Use-handlebars-template-engine
+- Completed issue #.DU-001-Use-handlebars-template-engine
  - Gliffy conversion
  - Java Class generation
 
