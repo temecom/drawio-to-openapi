@@ -3,6 +3,7 @@
 * @date: {{date}}
 * @source: {{model.source.fileName}}
 * @copyright: {{copyright}}
+* @uml {{definition.id}}
 */ 
 
 package {{definition.package.name}}; 
@@ -15,8 +16,9 @@ package {{definition.package.name}};
 public class {{definition.name}} {{#if definition.superClass}}extends {{definition.superClass}}{{/if}} {{#if definition.interfaces}}implements {{definition.interfaces}} {{/if}} {
 
 {{#each definition.attributes as |attribute|}}
-
-    /** {{attribute.name}} */
+    /** {{attribute.name}} 
+     * @uml {{attribute.id}}
+    */
     private {{attribute.type}} {{attribute.name}};
 {{/each}}
 
@@ -24,9 +26,11 @@ public class {{definition.name}} {{#if definition.superClass}}extends {{definiti
 
     /**
      * {{method.name}}
+     * 
+     * @uml {{method.id}}
      */
-    public {{method.type}} {{method.name}} ({{#each method.parameters as |parameter|}}{{parameter.type}} {{parmeter.name}}{{comma}}{{/each}}) {
+    public {{method.type}} {{method.name}} ({{#each method.parameters as |parameter|}}{{#if @index}}, {{/if}}{{parameter.type}} {{parameter.name}}{{/each}}) {
         {{method.code}}
     }
-{{/each}}
+    {{/each}}
 }

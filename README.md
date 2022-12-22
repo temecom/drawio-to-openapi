@@ -11,7 +11,7 @@ A collection of utilities to import models from UML design tools into a common J
 * Template driven code generation using Handlebars library
 * Conversion job configuration provides batched, repeatable operations to multiple targets
 
-\!\[feature X\]\(images/feature-x.png\)
+\!\[feature X\]\(images/MarketingModel.png\)
 
 
 ## Requirements
@@ -39,17 +39,17 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 Users appreciate release notes as you update your extension.
 
-### 1.0.0
+### 0.1.0
 
 Initial release of ...
 
-### 1.0.1
+### 0.1.0
+Basic Functionality
 
-Fixed issue #.
+Completed issue #.DU-001-Use-handlebars-template-engine
+ - Gliffy conversion
+ - Java Class generation
 
-### 1.1.0
-
-Added features X, Y, and Z.
 
 ---
 

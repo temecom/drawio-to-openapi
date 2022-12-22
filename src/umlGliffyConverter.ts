@@ -16,8 +16,8 @@ const GLIFFY_STEREOTYPE_PATTERN: RegExp = /"><<(\w*)>></g;
 const GLIFFY_CLASS_NAME_PATTERN: RegExp = /">([a-zA-Z0-9.]*)</g;
 const GLIFFY_ATTRIBUTES_PATTERN: RegExp = />(\w*:\s?\w*)</g;
 const GLIFFY_ATTRIBUTE_PATTERN: RegExp = /(\w*):\s?(\w*)/i;
-const GLIFFY_METHODS_PATTERN: RegExp = />(\w*)[(](.*)[)]:\s?([a-zA-Z0-9<>]*)</g;
-const GLIFFY_METHOD_PATTERN: RegExp = /(\w*)[(](.*)[)]:\s?([a-zA-Z0-9<>]*)/i;
+const GLIFFY_METHODS_PATTERN: RegExp = />([a-zA-Z0-9]*[(].*[)]:\s?[a-zA-Z0-9<>]*)</g;
+const GLIFFY_METHOD_PATTERN: RegExp = /([a-zA-Z0-9]*)[(](.*)[)]:\s?([a-zA-Z0-9<>]*)/i;
 const GLIFFY_PARAMETER_PATTERN: RegExp = /([a-zA-Z0-9]*):([a-zA-Z0-9<>]*)/g
 const GLIFFY_PACKAGES_PATTERN: RegExp = />(\w*\(\):\s?\w*)</g;
 const GLIFFY_PACKAGE_PATTERN: RegExp = /(\w*\(\)):\s?(\w*)/i;
@@ -91,7 +91,7 @@ export class UmlConverter implements uml.Converter {
                 });
             }
         });
-        if (model.packages.length===1) {
+        if (model.packages.length === 1) {
             // Only one package use as default
             model.defaultPackage = model.packages[0];
         }
@@ -190,12 +190,14 @@ export class UmlConverter implements uml.Converter {
             if (matches) {
                 method.id = randomUUID();
                 method.name = matches[1];
-                var parameters:string = matches[2]; 
-                var parameterMatches: RegExpMatchArray | null = parameters.match(GLIFFY_PARAMETER_PATTERN); 
+                var parameters: string = matches[2];
+                var parameterMatches: IterableIterator<RegExpMatchArray> | null = parameters.matchAll(GLIFFY_PARAMETER_PATTERN);
                 if (parameterMatches) {
-                    var parameterName = parameterMatches[1];
-                    var parameterType = parameterMatches[2]; 
-                    method.addParameter(parameterName, parameterType)
+                    for (let parameterMatch of parameterMatches) {
+                        var parameterName = parameterMatch[1];
+                        var parameterType = parameterMatch[2];
+                        method.addParameter(parameterName, parameterType)
+                    }
                 }
                 method.type = matches[3];
                 method.stereotype = uml.UmlStereotype.METHOD;
@@ -279,9 +281,11 @@ export class UmlConverter implements uml.Converter {
                         var matches: Iterable<RegExpMatchArray> | null = html.matchAll(pattern);
                         if (matches) {
                             for (let match of matches) {
-                                text = match[1];
-                                if (text && text.length > 0) {
-                                    texts.push(text);
+                                for (let i = 1; i < match.length; i++) {
+                                    text = match[i];
+                                    if (text && text.length > 0) {
+                                        texts.push(text);
+                                    }
                                 }
                             };
                         }
