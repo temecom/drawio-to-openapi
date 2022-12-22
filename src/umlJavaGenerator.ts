@@ -16,7 +16,7 @@ export class UmlJavaGenerator implements uml.Generator {
      * Generate the java class definitions from the UmlDefinition
      * @param model uml.ModelDefinition to use
      */
-    generate(command: uml.Command): string {
+    generate(command: uml.GeneratorJob): string {
         var code: string = ""; 
         console.debug("Generating Java code for:"); 
         console.debug(command);

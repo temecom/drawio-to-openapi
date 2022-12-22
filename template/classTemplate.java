@@ -5,28 +5,27 @@
 * @copyright: {{copyright}}
 */ 
 
-// Package
 package {{definition.package.name}}; 
 
 // Imports
 
-// Class
-
 /**
 * Class definition for {{definition.name}}
 */
-public class {{definition.name}}
-    {{#if definition.superClass}}extends {{definition.superClass}}{{/if}} 
-    {{#if definition.interfaces}}implements {{definition.interfaces}} {{/if}} {
+public class {{definition.name}} {{#if definition.superClass}}extends {{definition.superClass}}{{/if}} {{#if definition.interfaces}}implements {{definition.interfaces}} {{/if}} {
 
-// Attributes
 {{#each definition.attributes as |attribute|}}
+
+    /** {{attribute.name}} */
     private {{attribute.type}} {{attribute.name}};
 {{/each}}
-// Methods
 
 {{#each  definition.methods as |method|}}
-    private {{method.returnType}} {{method.name}} ({{method.parameters}}) {
+
+    /**
+     * {{method.name}}
+     */
+    public {{method.type}} {{method.name}} ({{#each method.parameters as |parameter|}}{{parameter.type}} {{parmeter.name}}{{comma}}{{/each}}) {
         {{method.code}}
     }
 {{/each}}

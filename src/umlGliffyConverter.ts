@@ -16,8 +16,9 @@ const GLIFFY_STEREOTYPE_PATTERN: RegExp = /"><<(\w*)>></g;
 const GLIFFY_CLASS_NAME_PATTERN: RegExp = /">([a-zA-Z0-9.]*)</g;
 const GLIFFY_ATTRIBUTES_PATTERN: RegExp = />(\w*:\s?\w*)</g;
 const GLIFFY_ATTRIBUTE_PATTERN: RegExp = /(\w*):\s?(\w*)/i;
-const GLIFFY_METHODS_PATTERN: RegExp = />(\w*\(\):\s?\w*)</g;
-const GLIFFY_METHOD_PATTERN: RegExp = /(\w*\(\)):\s?(\w*)/i;
+const GLIFFY_METHODS_PATTERN: RegExp = />(\w*)[(](.*)[)]:\s?([a-zA-Z0-9<>]*)</g;
+const GLIFFY_METHOD_PATTERN: RegExp = /(\w*)[(](.*)[)]:\s?([a-zA-Z0-9<>]*)/i;
+const GLIFFY_PARAMETER_PATTERN: RegExp = /([a-zA-Z0-9]*):([a-zA-Z0-9<>]*)/g
 const GLIFFY_PACKAGES_PATTERN: RegExp = />(\w*\(\):\s?\w*)</g;
 const GLIFFY_PACKAGE_PATTERN: RegExp = /(\w*\(\)):\s?(\w*)/i;
 const GLIFFY_TEXT_GROUP_PATTERN: RegExp = />(\w*|w*:\s?\w*)</g;
@@ -25,6 +26,7 @@ const UID_GENERALIZATION: string = 'com.gliffy.shape.uml.uml_v2.class.generaliza
 const UID_CLASS: string = 'com.gliffy.shape.uml.uml_v2.class.class';
 const UID_INTERFACE: string = 'com.gliffy.shape.uml.uml_v2.class.interface';
 
+// /(\w*)[(](?=(([a-zA-Z0-9]*):([a-zA-Z0-9<>]*)))[ ,]?[)]:(\s?\w*)/g
 /**
   * 
   */
@@ -179,14 +181,23 @@ export class UmlConverter implements uml.Converter {
      */
     findMethods(item: any): Array<uml.MethodDefinition> {
         var methods: Array<uml.MethodDefinition> = new Array();
+        // Locate all of the methods under the class child
         var methodTexts: Array<string> = this.findTexts(item, GLIFFY_METHODS_PATTERN);
         methodTexts.forEach(t => {
             var method: uml.MethodDefinition = new uml.MethodDefinition;
+            // Get the outer method details - name():type
             var matches: RegExpMatchArray | null = t.match(GLIFFY_METHOD_PATTERN);
             if (matches) {
                 method.id = randomUUID();
                 method.name = matches[1];
-                method.type = matches[2];
+                var parameters:string = matches[2]; 
+                var parameterMatches: RegExpMatchArray | null = parameters.match(GLIFFY_PARAMETER_PATTERN); 
+                if (parameterMatches) {
+                    var parameterName = parameterMatches[1];
+                    var parameterType = parameterMatches[2]; 
+                    method.addParameter(parameterName, parameterType)
+                }
+                method.type = matches[3];
                 method.stereotype = uml.UmlStereotype.METHOD;
                 methods.push(method);
             }

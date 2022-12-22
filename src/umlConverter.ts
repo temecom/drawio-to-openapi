@@ -65,27 +65,26 @@ export class UmlConverter {
 
         if (editor) {
             try {
-            const document = editor.document;
-            var model: uml.ModelDefinition = JSON.parse(document.getText()) as uml.ModelDefinition;
-            var generator: uml.Generator = new java.UmlJavaGenerator();
-            this.readTemplate(context, "classTemplate.java").then(template => {
-                model.classes.forEach(classDefinition => {
-                    // Create the command wrapper class
-                    var command: uml.Command = new uml.Command();
-                    command.template = template;
-                    if (!classDefinition.package) {
-                        // Assign a default package if there is none defined 
-                        classDefinition.package = model.defaultPackage;
-                    }
-                    command.definition = classDefinition;
-                    var code: string = generator.generate(command);
-                    this.writeFile(context, classDefinition.name, "java", code).then(editor => {
-                        console.debug("Success"); 
-                    });
+                const document = editor.document;
+                var model: uml.ModelDefinition = JSON.parse(document.getText()) as uml.ModelDefinition;
+
+                model.classes.forEach(definition => {
+                    // Create the job wrapper class
+                    var job: uml.GeneratorJob = new uml.GeneratorJob();
+
+                    job.definition = definition;
+                    job.templateName = "classTemplate";
+                    job.fileExtension = "java";
+                    job.path = "src/main/java";
+                    job.package = model.defaultPackage;
+                    this.generateCodeFromJob(context, job)
+                        .then(result =>
+                            console.debug(result)
+                        );
                 });
-            });
-        } catch (e) {
-                console.error("Failed to generate Java code %s", e); 
+
+            } catch (e) {
+                console.error("Failed to generate Java code %s", e);
                 vscode.window.showErrorMessage("Failed to generate Java code");
             }
         } else {
@@ -94,8 +93,46 @@ export class UmlConverter {
         }
 
         vscode.window.showInformationMessage('Files generated Successfully!').then(v => {
-            console.debug("Completed Code Generation"); 
+            console.debug("Completed Code Generation");
         });
+    }
+
+    generateCodeFromJob(context: vscode.ExtensionContext, job: uml.GeneratorJob): Thenable<string> {
+
+        if (!(job && job.definition && job.templateName && job.fileExtension && job.path)) {
+            throw new Error("Missing job.definition || job.templateName ");
+        }
+        var definition: uml.BaseDefinition = job.definition;
+        if (!definition.package) {
+            // Assign a default package if there is none defined 
+            definition.package = job.package;
+        }
+        var generator: uml.Generator = new java.UmlJavaGenerator();
+        return this.readTemplate(context, job.templateName + "." + job.fileExtension)
+            .then(template => {
+
+                // Generate the code using the job
+                job.template = template; 
+                return generator.generate(job);
+            }).then(code => {
+
+                // split the package 
+                var packagePaths: Array<string>  = definition.package!.name.split("."); 
+                // Create the file uri 
+                var baseUmlUri: vscode.Uri = vscode.Uri.from({ scheme: "file", path: context.asAbsolutePath("generated") });
+                var fileUri = vscode.Uri.joinPath(baseUmlUri, job.path!); 
+
+                // Concatenate the segments of the package
+                fileUri = packagePaths.reduce ((f,s) => vscode.Uri.joinPath(f,s), fileUri); 
+                fileUri = vscode.Uri.joinPath(fileUri, definition.name + "." + job.fileExtension!);
+
+                // Write the file - returning a promise
+                return this.writeFile(context, fileUri, code);
+            }).then(editor => {
+                // Report success
+                return "Success";
+            });
+
     }
 
     /**
@@ -114,17 +151,19 @@ export class UmlConverter {
         });
     }
 
-    writeFile(context: vscode.ExtensionContext, name: string, extension: string, content: string): Thenable<vscode.TextEditor> {
-        var baseUmlUri: vscode.Uri = vscode.Uri.from({ scheme: "file", path: context.asAbsolutePath("generated") });
-        var fileUri = vscode.Uri.joinPath(baseUmlUri, extension, name + "." + extension);
-        return vscode.workspace.fs.writeFile(fileUri, Buffer.from(content)).then(f => {
-            return vscode.workspace.fs.stat(fileUri).then(fileStat => {
+    writeFile(context: vscode.ExtensionContext, fileUri: vscode.Uri, content: string): Thenable<vscode.TextEditor> {
+
+        return vscode.workspace.fs.writeFile(fileUri, Buffer.from(content))
+            .then(f => {
+                return vscode.workspace.fs.stat(fileUri)
+            })
+            .then(fileStat => {
                 console.debug("Saved file to " + fileUri.path);
-                return vscode.workspace.openTextDocument(fileUri).then(document => {
-                    return vscode.window.showTextDocument(document);
-                });
+                return vscode.workspace.openTextDocument(fileUri)
+            })
+            .then(document => {
+                return vscode.window.showTextDocument(document);
             });
-        });
     }
 
 }
