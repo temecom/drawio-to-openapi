@@ -25,7 +25,7 @@
       },
       {
         "command": "uml-tools.generate",
-        "title": "uml-tools:Convert to UML-Json"
+        "title": "uml-tools:Generate Code"
       }
     ]
   },
