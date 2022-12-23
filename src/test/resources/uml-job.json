@@ -1,0 +1,57 @@
+{
+    "name" : "Java and Ember.js models from Gliffy",
+    "sourcePrefix" : "MarketingModel-5",
+    "import" : 
+        {
+            "name": "Gliffy Import",
+            "converter": "umlGliffyConverter"
+        },
+    "generators" : [
+        {
+            "java" : {
+                "generator": "umlCodeGenerator",
+                "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-service-master/oopscope-entity-service/src/main/java", 
+                "definitions" : [
+                    {
+                        "name": "Java Entities",
+                        "filter" : "classes",
+                        "templateFile": "classTemplate.java"
+                    },
+                    {
+                        "name": "Java Interfaces",
+                        "filter": "interfaces",
+                        "templateFile": "interfaceTemplate.java"
+                    },
+                    {
+                        "name": "Java Enumerations",
+                        "filter": "enumerations",
+                        "templateFile": "enumerationTemplate.java"
+                    }
+                ]
+            }, 
+            "ember" : {
+                "generator": "umlCodeGenerator",
+                "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-marketing-ui/app/models", 
+                "definitions" : [
+                    {
+                        "name": "Ember classes",
+                        "filter" : "classes",
+                        "templateFile": "classTemplate.ts"
+                    },
+                    {
+                        "name": "Ember Interfaces",
+                        "filter": "interfaces",
+                        "templateFile": "interfaceTemplate.ts"
+                    },
+                    {
+                        "name": "Ember Enumerations",
+                        "filter": "enumerations",
+                        "templateFile": "enumerationTemplate.ts"
+                    }
+                ]
+            }
+        }
+ 
+    ]
+    
+}

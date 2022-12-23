@@ -3,29 +3,41 @@
 * @date: {{date}}
 * @source: {{model.source.fileName}}
 * @copyright: {{copyright}}
+*
+* @author: {{author}}
+* @uml {{definition.id}}
 */ 
 
-// Package
 package {{definition.package.name}}; 
 
 // Imports
-
-/**
-* Class definition for {{definition.name}}
-*/
-public class {{definition.name}}
-    {{#if definition.superClass}}extends {{definition.superClass}}{{/if}} 
-    {{#if definition.interfaces}}implements {{definition.interfaces}} {{/if}} {
-
-    // Attributes
-{{#each definition.attributes as |attribute|}}
-    private {{attribute.type}} {{attribute.name}};
+{{#each definition.imports as |import|}}
+    {{import}};
 {{/each}}
 
-    // Methods
+/**
+* Interface definition for {{definition.name}}
+*/
+public class {{definition.name}}
+    {{#if definition.superClass}}extends {{definition.superClass}}{{/if}} {
 
+    {{#each definition.attributes as |attribute|}}{{#if @index}},{{/if}}
+     /** {{attribute.name}} 
+     * @uml {{attribute.id}}
+    */
+    {{attribute.name}}{{/each}};
+ 
 {{#each  definition.methods as |method|}}
-    private {{method.returnType}} {{method.name}} ({{method.parameters}}) {
+    /**
+     * {{method.name}}
+     * 
+     * {{#each method.parameters as |parameter|}}
+     *  @param {{parameter.name}} {{parameter.type}}
+     * {{/each}})
+     * @returns {{method.type}} 
+     * @uml {{method.id}}
+     */
+    {{method.type}} {{method.name}} ({{#each method.parameters as |parameter|}}{{#if @index}}, {{/if}}{{parameter.type}} {{parameter.name}}{{/each}}) {
         {{method.code}}
     }
 {{/each}}

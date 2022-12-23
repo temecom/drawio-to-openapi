@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import * as vscode from 'vscode';
 import * as uml from './umlEntities';
 import * as gliffy from './umlGliffyConverter';
-import * as java from './umlJavaGenerator';
+import * as java from './umlCodeGenerator';
 import * as path from 'path';
 import { writeFile } from 'fs';
 
