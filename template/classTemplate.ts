@@ -5,10 +5,6 @@
 * @copyright: {{copyright}}
 * @uml {{definition.id}}
 */ 
-import { getSystemErrorMap } from "util";
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
 
 {{#each definition.imports as |import|}}
 import { {{import.name}} } from {{import.name}};
@@ -18,9 +14,7 @@ import { {{import.name}} } from {{import.name}};
 * Class definition for {{definition.name}}
 * Note: uses Lombok getter and setter annotations
 */
-@Getter
-@Setter
-@AccessLevel(chained=true)
+
 export class {{definition.name}} {{#if definition.superClass}}extends {{definition.superClass}}{{/if}} {{#if definition.interfaces}}implements {{definition.interfaces}} {{/if}} {
 
 {{#each definition.attributes as |attribute|}}

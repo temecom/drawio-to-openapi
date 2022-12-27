@@ -8,6 +8,9 @@
 
 package {{definition.package.name}}; 
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
 {{#each definition.imports as |import|}}
 import {{import.package}}.{{import.name}};
@@ -17,6 +20,9 @@ import {{import.package}}.{{import.name}};
 * Class definition for {{definition.name}}
 * @uml {{definition.id}}
 */
+@Getter
+@Setter
+@AccessLevel(chained=true)
 public class {{definition.name}} {{#if definition.superClass}}extends {{definition.superClass}}{{/if}} {{#if definition.interfaces}}implements {{definition.interfaces}} {{/if}} {
 
 {{#each definition.attributes as |attribute|}}
