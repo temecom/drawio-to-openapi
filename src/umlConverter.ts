@@ -1,6 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-
 import * as vscode from "vscode";
 import * as uml from "./umlEntities";
 import * as gliffy from "./umlGliffyConverter";
@@ -16,41 +13,59 @@ export class UmlConverter {
   convert(context: vscode.ExtensionContext): void {
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
-
     if (editor != null) {
       try {
-        // TODO:  Only one converter do far - add optional converter selection
+        // TODO:  Only one converter so far - add optional converter selection
         const converter: uml.Converter = new gliffy.UmlConverter();
         const document = editor.document;
         const fileNameSegments = document.fileName.split(".")[0].split("/");
         const name = fileNameSegments[fileNameSegments.length - 1];
-        const model: uml.ModelDefinition = converter.convert(
-          document.getText(),
-          name
-        );
-        // TODO: use file selector
-        const baseUmlUri: vscode.Uri = vscode.Uri.from({
-          scheme: "file",
-          path: context.asAbsolutePath("generated/uml"),
+        this.convertDocument(context, document, name).then((doc) => {
+          vscode.window.showTextDocument(doc);
         });
-        const fileUri = vscode.Uri.joinPath(baseUmlUri, name + ".json");
-        void vscode.workspace.fs
-          .writeFile(fileUri, Buffer.from(JSON.stringify(model)))
-          .then((file) => {
-            return vscode.workspace.fs.stat(fileUri);
-          })
-          .then((fileStat) => {
-            console.debug("Saved file to " + fileUri.path);
-            return vscode.workspace.openTextDocument(fileUri);
-          })
-          .then((document) => vscode.window.showTextDocument(document));
-        console.debug("Converted: ");
-        console.debug(model);
       } catch (e) {
-        console.error("Failed to import code", e);
+        console.error("Failed to import code %s", e);
       }
     }
     void vscode.window.showInformationMessage("File Converted Successfully!");
+  }
+
+  /**
+   * Convert the document to a uml model and save it to the output
+   * @param context vscode context
+   * @param document document to convert
+   * @param name name of document
+   * @returns Thenable<TextDocument> converted document within a promise
+   */
+  convertDocument(
+    context: vscode.ExtensionContext,
+    document: vscode.TextDocument,
+    name: string
+  ): Thenable<vscode.TextDocument> {
+    // TODO:  Only one converter so far - add optional converter selection
+    const converter: uml.Converter = new gliffy.UmlConverter();
+    const model: uml.ModelDefinition = converter.convert(
+      document.getText(),
+      name
+    );
+    // TODO: use file selector
+    const baseUmlUri: vscode.Uri = vscode.Uri.from({
+      scheme: "file",
+      path: context.asAbsolutePath("generated/uml"),
+    });
+    const fileUri = vscode.Uri.joinPath(baseUmlUri, name + ".json");
+    return vscode.workspace.fs
+      .writeFile(fileUri, Buffer.from(JSON.stringify(model)))
+      .then((file) => {
+        return vscode.workspace.fs.stat(fileUri);
+      })
+      .then((fileStat) => {
+        console.debug("Saved file to " + fileUri.path);
+        return vscode.workspace.openTextDocument(fileUri);
+      })
+      .then((document) => {
+        return document;
+      });
   }
 
   /**
@@ -70,7 +85,7 @@ export class UmlConverter {
 
         model.classes.forEach((definition) => {
           // Create the job wrapper class
-          const job: uml.GeneratorJob = new uml.GeneratorJob();
+          const job: uml.GenerationJob = new uml.GenerationJob();
 
           job.definition = definition;
           job.templateName = "classTemplate";
@@ -99,9 +114,50 @@ export class UmlConverter {
       });
   }
 
+  /**
+   * Use the current job document to import and generate
+   * @param context editor context
+   */
+  runJob(context: vscode.ExtensionContext): void {
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+
+    if (editor != null) {
+      try {
+        // Get the current job document
+        const document = editor.document;
+        const jobText: string = document.getText();
+        const job: uml.UmlJob = JSON.parse(jobText) as uml.UmlJob;
+        console.info("Executing job: %s", job.name);
+        job.conversionJobs.forEach((conversionJob) => {
+          console.info("Converting with job %s", conversionJob.name);
+          this.convert(context);
+        });
+      } catch (e) {
+        console.error("Failed to run job %s", e);
+        void vscode.window.showErrorMessage("Failed to generate Java code");
+      }
+    } else {
+      console.error("No editor open");
+      void vscode.window.showWarningMessage("Please open a valid UML job file");
+    }
+
+    void vscode.window
+      .showInformationMessage("Files generated Successfully!")
+      .then((v) => {
+        console.debug("Completed Code Generation");
+      });
+  }
+
+  /**
+   * Generate code from generator job
+   * @param context
+   * @param job
+   * @returns
+   */
   generateCodeFromJob(
     context: vscode.ExtensionContext,
-    job: uml.GeneratorJob
+    job: uml.GenerationJob
   ): Thenable<string> {
     if (
       !(

@@ -26,6 +26,10 @@
       {
         "command": "uml-tools.generate",
         "title": "uml-tools:Generate Code"
+      },
+      {
+        "command": "uml-tools.execute",
+        "title": "uml-tools:Execute Job"
       }
     ]
   },

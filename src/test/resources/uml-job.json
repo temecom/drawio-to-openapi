@@ -1,57 +1,59 @@
 {
-    "name" : "Java and Ember.js models from Gliffy",
-    "sourcePrefix" : "MarketingModel-5",
-    "import" : 
+  "name": "Java and Ember.js models from Gliffy",
+  "sourcePrefix": "MarketingModel-5",
+  "parameters": {
+    "rootFolderUri": "file:///home/csmith/Development/oopscope/",
+    "workingFolder": "${rootFolderUri}/oopscope/marketing"
+  },
+  "conversionJobs": [
+    {
+      "name": "Gliffy Import",
+      "converter": "umlGliffyConverter",
+      "sourceUri": ""
+    }
+  ],
+  "generationJobs": [
+    {
+      "generator": "handlebarsCodeGenerator",
+      "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-service-master/oopscope-entity-service/src/main/java",
+      "definitions": [
         {
-            "name": "Gliffy Import",
-            "converter": "umlGliffyConverter"
+          "name": "Java Entities",
+          "filter": "classes",
+          "templateFile": "classTemplate.java"
         },
-    "generators" : [
         {
-            "java" : {
-                "generator": "umlCodeGenerator",
-                "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-service-master/oopscope-entity-service/src/main/java", 
-                "definitions" : [
-                    {
-                        "name": "Java Entities",
-                        "filter" : "classes",
-                        "templateFile": "classTemplate.java"
-                    },
-                    {
-                        "name": "Java Interfaces",
-                        "filter": "interfaces",
-                        "templateFile": "interfaceTemplate.java"
-                    },
-                    {
-                        "name": "Java Enumerations",
-                        "filter": "enumerations",
-                        "templateFile": "enumerationTemplate.java"
-                    }
-                ]
-            }, 
-            "ember" : {
-                "generator": "umlCodeGenerator",
-                "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-marketing-ui/app/models", 
-                "definitions" : [
-                    {
-                        "name": "Ember classes",
-                        "filter" : "classes",
-                        "templateFile": "classTemplate.ts"
-                    },
-                    {
-                        "name": "Ember Interfaces",
-                        "filter": "interfaces",
-                        "templateFile": "interfaceTemplate.ts"
-                    },
-                    {
-                        "name": "Ember Enumerations",
-                        "filter": "enumerations",
-                        "templateFile": "enumerationTemplate.ts"
-                    }
-                ]
-            }
+          "name": "Java Interfaces",
+          "filter": "interfaces",
+          "templateFile": "interfaceTemplate.java"
+        },
+        {
+          "name": "Java Enumerations",
+          "filter": "enumerations",
+          "templateFile": "enumerationTemplate.java"
         }
- 
-    ]
-    
+      ]
+    },
+    {
+      "generator": "handlebarsCodeGenerator",
+      "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-marketing-ui/app/models",
+      "definitions": [
+        {
+          "name": "Ember classes",
+          "filter": "classes",
+          "templateFile": "classTemplate.ts"
+        },
+        {
+          "name": "Ember Interfaces",
+          "filter": "interfaces",
+          "templateFile": "interfaceTemplate.ts"
+        },
+        {
+          "name": "Ember Enumerations",
+          "filter": "enumerations",
+          "templateFile": "enumerationTemplate.ts"
+        }
+      ]
+    }
+  ]
 }

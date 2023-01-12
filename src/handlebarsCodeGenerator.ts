@@ -9,7 +9,7 @@ export class HandlebarsCodeGenerator implements uml.Generator {
    * Generate the java class definitions from the UmlDefinition
    * @param model uml.ModelDefinition to use
    */
-  generate(command: uml.GeneratorJob): string {
+  generate(command: uml.GenerationJob): string {
     let code: string = "";
     console.debug("Generating Java code for:");
     console.debug(command);

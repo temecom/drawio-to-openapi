@@ -1,21 +1,22 @@
 /*
  * @file: umlEntities.ts
  */
-import { randomUUID } from 'crypto';
+import { randomUUID } from "crypto";
+import { Uri } from "vscode";
 
 /**
  * Stereotypes for UML definitions
  */
 export enum UmlStereotype {
-  CLASS = 'class',
-  INTERFACE = 'interface',
-  IMPLEMENTS = 'implements',
-  EXTENDS = 'extends',
-  ENUMERATION = 'enumeration',
-  PACKAGE = 'package',
-  ATTRIBUTE = 'attribute',
-  METHOD = 'method',
-  MODEL = 'model',
+  CLASS = "class",
+  INTERFACE = "interface",
+  IMPLEMENTS = "implements",
+  EXTENDS = "extends",
+  ENUMERATION = "enumeration",
+  PACKAGE = "package",
+  ATTRIBUTE = "attribute",
+  METHOD = "method",
+  MODEL = "model",
 }
 
 export enum UmlElement {
@@ -30,12 +31,12 @@ export enum UmlElement {
  */
 
 export enum TemplateModifier {
-  OPTIONAL = 'optional',
-  ITERATATION_BLOCK = 'iterate',
-  ITERATE_BLOCK = 'iterateBlock',
-  ITERATION_BLOCK_END = 'endBlock',
-  OPTIONAL_BLOCK = 'OPTIONAL_BLOCK',
-  OPTIONAL_BLOCK_END = 'END_OPTIONAL_BLOCK',
+  OPTIONAL = "optional",
+  ITERATATION_BLOCK = "iterate",
+  ITERATE_BLOCK = "iterateBlock",
+  ITERATION_BLOCK_END = "endBlock",
+  OPTIONAL_BLOCK = "OPTIONAL_BLOCK",
+  OPTIONAL_BLOCK_END = "END_OPTIONAL_BLOCK",
 }
 /**
  * Base class for all UML entities
@@ -49,9 +50,9 @@ export class BaseEntity {
    * @param id (optional) id of the entity - a random UUID is assigned if not passed
    * @param name (optional) name of the entity
    */
-  constructor (id?: string, name?: string) {
+  constructor(id?: string, name?: string) {
     this.id = id ?? randomUUID();
-    this.name = name ?? '';
+    this.name = name ?? "";
   }
 }
 /**
@@ -59,7 +60,7 @@ export class BaseEntity {
  */
 export class BaseDefinition extends BaseEntity {
   stereotype: UmlStereotype = null as unknown as UmlStereotype;
-  parent: string = '';
+  parent: string = "";
 }
 
 /**
@@ -71,7 +72,7 @@ export class BaseDefinition extends BaseEntity {
  */
 export class ComponentDefinition extends BaseEntity {
   stereotype: UmlStereotype = null as unknown as UmlStereotype;
-  parent: string = '';
+  parent: string = "";
   package?: PackageDefinition;
 }
 
@@ -83,7 +84,7 @@ export class ModelDefinition extends BaseDefinition {
   interfaces: InterfaceDefinition[];
   packages: PackageDefinition[];
   defaultPackage?: PackageDefinition;
-  constructor () {
+  constructor() {
     super();
     this.stereotype = UmlStereotype.MODEL;
     this.classes = [];
@@ -91,15 +92,15 @@ export class ModelDefinition extends BaseDefinition {
     this.packages = [];
   }
 
-  addClass (classDefinition: ClassDefinition): void {
+  addClass(classDefinition: ClassDefinition): void {
     this.classes.push(classDefinition);
   }
 
-  addInterface (interfaceDefinition: InterfaceDefinition): void {
+  addInterface(interfaceDefinition: InterfaceDefinition): void {
     this.interfaces.push(interfaceDefinition);
   }
 
-  addPackage (packageDefinition: PackageDefinition): void {
+  addPackage(packageDefinition: PackageDefinition): void {
     this.packages?.push(packageDefinition);
   }
 }
@@ -107,14 +108,14 @@ export class ModelDefinition extends BaseDefinition {
  * Interface for all UmlConvertors
  */
 export interface Converter {
-  convert: (document: string, name: string) => ModelDefinition
+  convert: (document: string, name: string) => ModelDefinition;
 }
 
 /**
  * Interface for a UML generator
  */
 export interface Generator {
-  generate: (command: GeneratorJob) => string
+  generate: (command: GenerationJob) => string;
 }
 /**
  * Superclass for UML jobs
@@ -126,14 +127,17 @@ export class BaseJob extends BaseEntity {}
 export class ConversionJob extends BaseJob {
   /** Converter to use */
   converter?: Converter;
+  sourceUri?: Uri;
+  destinationUri?: Uri;
 
   /** Converted Model */
   model?: ModelDefinition;
 }
+
 /**
  * Job to generate code
  */
-export class GeneratorJob extends BaseJob {
+export class GenerationJob extends BaseJob {
   /** UML Definition */
   definition?: ComponentDefinition;
 
@@ -151,8 +155,20 @@ export class GeneratorJob extends BaseJob {
 
   /** Generated code */
   code?: string;
-  fileExtension: string = '';
-  path: string = '';
+  fileExtension: string = "";
+  path: string = "";
+}
+/**
+ * Complete Uml Job - conversion through generation
+ */
+export class UmlJob extends BaseJob {
+  conversionJobs: ConversionJob[];
+  generationJobs: GenerationJob[];
+  constructor() {
+    super();
+    this.conversionJobs = [];
+    this.generationJobs = [];
+  }
 }
 /**
  * The meta class to describe a class
@@ -160,7 +176,7 @@ export class GeneratorJob extends BaseJob {
 export class InterfaceDefinition extends ComponentDefinition {
   methods: MethodDefinition[] = [];
   superClass?: InterfaceDefinition;
-  constructor () {
+  constructor() {
     super();
     this.stereotype = UmlStereotype.INTERFACE;
   }
@@ -172,7 +188,7 @@ export class ClassDefinition extends InterfaceDefinition {
   attributes: AttributeDefinition[] = [];
   superClass?: ClassDefinition;
   implementations?: ImplemenationDefinition[];
-  constructor () {
+  constructor() {
     super();
     this.stereotype = UmlStereotype.CLASS;
   }
@@ -181,7 +197,7 @@ export class ClassDefinition extends InterfaceDefinition {
  * A package definition
  */
 export class PackageDefinition extends BaseDefinition {
-  constructor () {
+  constructor() {
     super();
     this.stereotype = UmlStereotype.PACKAGE;
   }
@@ -191,7 +207,7 @@ export class PackageDefinition extends BaseDefinition {
  * A package definition
  */
 export class EnumerationDefinition extends ComponentDefinition {
-  constructor () {
+  constructor() {
     super();
     this.stereotype = UmlStereotype.ENUMERATION;
   }
@@ -201,8 +217,8 @@ export class EnumerationDefinition extends ComponentDefinition {
  * The a definition class to describe an Attribute
  */
 export class AttributeDefinition extends BaseDefinition {
-  type: string = '';
-  constructor () {
+  type: string = "";
+  constructor() {
     super();
     this.stereotype = UmlStereotype.ATTRIBUTE;
   }
@@ -212,9 +228,9 @@ export class AttributeDefinition extends BaseDefinition {
  * The a meta class to describe a method
  */
 export class MethodDefinition extends BaseDefinition {
-  type: string = '';
+  type: string = "";
   parameters: AttributeDefinition[];
-  constructor () {
+  constructor() {
     super();
     this.parameters = new Array<AttributeDefinition>();
   }
@@ -223,7 +239,7 @@ export class MethodDefinition extends BaseDefinition {
    * Add a parameter to the parameter array
    * @param parameter
    */
-  addParameter (name: string, type: string): void {
+  addParameter(name: string, type: string): void {
     const parameter: AttributeDefinition = new AttributeDefinition();
     parameter.name = name;
     parameter.type = type;
@@ -248,7 +264,7 @@ export class AssociationDefinition extends BaseDefinition {
 
  */
 export class GeneralizationDefinition extends AssociationDefinition {
-  constructor () {
+  constructor() {
     super();
     this.stereotype = UmlStereotype.EXTENDS;
   }
@@ -257,7 +273,7 @@ export class GeneralizationDefinition extends AssociationDefinition {
  * The a meta class to describe an implementation connector eg:
  */
 export class ImplemenationDefinition extends AssociationDefinition {
-  constructor () {
+  constructor() {
     super();
     this.stereotype = UmlStereotype.IMPLEMENTS;
   }

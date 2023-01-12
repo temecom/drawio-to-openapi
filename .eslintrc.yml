@@ -8,6 +8,7 @@ parserOptions:
   project: ./tsconfig.json
   sourceType: module
 rules: {
+  "space-before-function-paren": "always",
   "semi": "off",
   "@typescript-eslint/semi": "off",
   "quotes": "off",
