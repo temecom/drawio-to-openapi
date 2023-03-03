@@ -17,18 +17,18 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(disposable);
 
   // File conversion
-  disposable = vscode.commands.registerCommand("uml-tools.convert", () => {
+  disposable = vscode.commands.registerCommand("uml-tools.import", () => {
     const converter: umlConverter.UmlConverter =
       new umlConverter.UmlConverter();
-    converter.convert(context);
+    converter.import(context);
   });
   context.subscriptions.push(disposable);
 
   // File generation
-  disposable = vscode.commands.registerCommand("uml-tools.generate", () => {
+  disposable = vscode.commands.registerCommand("uml-tools.export", () => {
     const converter: umlConverter.UmlConverter =
       new umlConverter.UmlConverter();
-    converter.generate(context);
+    converter.export(context);
   });
   // File conversion
   disposable = vscode.commands.registerCommand("uml-tools.execute", () => {

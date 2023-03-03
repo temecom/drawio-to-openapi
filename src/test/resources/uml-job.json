@@ -1,21 +1,19 @@
 {
-  "name": "Java and Ember.js models from Gliffy",
-  "sourcePrefix": "MarketingModel-5",
-  "parameters": {
-    "rootFolderUri": "file:///home/csmith/Development/oopscope/",
-    "workingFolder": "${rootFolderUri}/oopscope/marketing"
-  },
-  "conversionJobs": [
+  "description": "Create Java and Ember.js models from Gliffy",
+  "name": "OopScopeMarketing-6",
+  "parameters": {},
+  "importSteps": [
     {
       "name": "Gliffy Import",
       "converter": "umlGliffyConverter",
-      "sourceUri": ""
+      "sourceUri": "${uml.gliffyRootUri}/MarketingModel-6.gliffy",
+      "destinationUri": "${uml.workingFolderUri}/MarketingModel-6.uml.json"
     }
   ],
-  "generationJobs": [
+  "exportSteps": [
     {
       "generator": "handlebarsCodeGenerator",
-      "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-service-master/oopscope-entity-service/src/main/java",
+      "destinationUri": "${uml.targetProjectUri}/java",
       "definitions": [
         {
           "name": "Java Entities",
@@ -36,7 +34,7 @@
     },
     {
       "generator": "handlebarsCodeGenerator",
-      "destinationUri": "file:///home/csmith/Development/oopscope/oopscope-marketing-ui/app/models",
+      "destinationUri": "${uml.targetProjectUri}/ts",
       "definitions": [
         {
           "name": "Ember classes",

@@ -107,42 +107,57 @@ export class ModelDefinition extends BaseDefinition {
 /**
  * Interface for all UmlConvertors
  */
-export interface Converter {
-  convert: (document: string, name: string) => ModelDefinition;
+export interface Importer {
+  import: (document: string, name: string) => ModelDefinition;
 }
 
 /**
  * Interface for a UML generator
  */
-export interface Generator {
-  generate: (command: GenerationJob) => string;
+export interface Exporter {
+  export: (command: ExportStep) => string;
 }
 /**
- * Superclass for UML jobs
+ * Superclass for UML jobs and steps
  */
-export class BaseJob extends BaseEntity {}
+export class BaseProcess extends BaseEntity {
+  name: string;
+  description?: string;
+  constructor(name: string) {
+    super();
+    this.name = name;
+  }
+}
 /**
  * Job to import and convert a UML model
  */
-export class ConversionJob extends BaseJob {
-  /** Converter to use */
-  converter?: Converter;
+export class ImportStep extends BaseProcess {
+  /** Importer to use */
+  importerClassname: string;
+  importer?: Importer;
   sourceUri?: Uri;
   destinationUri?: Uri;
+  document?: string;
 
   /** Converted Model */
   model?: ModelDefinition;
+
+  constructor() {
+    super("NewImportStep");
+    // Default importer
+    this.importerClassname = "gliffy.Importer";
+  }
 }
 
 /**
  * Job to generate code
  */
-export class GenerationJob extends BaseJob {
+export class ExportStep extends BaseProcess {
   /** UML Definition */
   definition?: ComponentDefinition;
 
   /** Code generator to use */
-  generator?: Generator;
+  exporter?: Exporter;
 
   /** File name for a code template file in 'handlebars' format */
   templateName?: string;
@@ -157,17 +172,23 @@ export class GenerationJob extends BaseJob {
   code?: string;
   fileExtension: string = "";
   path: string = "";
+  destinationUri?: Uri;
+  constructor() {
+    super("NewExportStep");
+  }
 }
 /**
  * Complete Uml Job - conversion through generation
  */
-export class UmlJob extends BaseJob {
-  conversionJobs: ConversionJob[];
-  generationJobs: GenerationJob[];
+export class UmlJob extends BaseProcess {
+  parameters?: Map<string, any>;
+  importSteps: ImportStep[];
+  model?: ModelDefinition;
+  exportSteps: ExportStep[];
   constructor() {
-    super();
-    this.conversionJobs = [];
-    this.generationJobs = [];
+    super("NewUmlJob");
+    this.importSteps = [];
+    this.exportSteps = [];
   }
 }
 /**

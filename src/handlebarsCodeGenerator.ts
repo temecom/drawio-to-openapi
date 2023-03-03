@@ -4,12 +4,12 @@ import * as handlebars from "handlebars";
  * Generate java code from the job definition
  * Uses handlebars templates and templating engine to process the
  */
-export class HandlebarsCodeGenerator implements uml.Generator {
+export class HandlebarsCodeGenerator implements uml.Exporter {
   /**
    * Generate the java class definitions from the UmlDefinition
    * @param model uml.ModelDefinition to use
    */
-  generate(command: uml.GenerationJob): string {
+  export(command: uml.ExportStep): string {
     let code: string = "";
     console.debug("Generating Java code for:");
     console.debug(command);

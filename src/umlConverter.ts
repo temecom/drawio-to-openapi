@@ -2,6 +2,10 @@ import * as vscode from "vscode";
 import * as uml from "./umlEntities";
 import * as gliffy from "./umlGliffyConverter";
 import * as handleBarsGenerator from "./handlebarsCodeGenerator";
+import assert = require("assert");
+import { UmlCommon } from "./umlCommon";
+
+const PARAMETER_PATTERN: RegExp = /\$\{([.0-9A-Za-z]*)\}/g;
 
 /**
  * A class to convert a Gliffy UML Document in '.gliffy' json form to a neutral UMLDefinition set
@@ -10,21 +14,46 @@ export class UmlConverter {
   /**
    * Convert the open document to normalized UML form
    */
-  convert(context: vscode.ExtensionContext): void {
+  import(context: vscode.ExtensionContext, importStep?: uml.ImportStep): void {
     // Get the active text editor
-    const editor = vscode.window.activeTextEditor;
-    if (editor != null) {
-      try {
-        // TODO:  Only one converter so far - add optional converter selection
-        const converter: uml.Converter = new gliffy.UmlConverter();
-        const document = editor.document;
-        const fileNameSegments = document.fileName.split(".")[0].split("/");
-        const name = fileNameSegments[fileNameSegments.length - 1];
-        this.convertDocument(context, document, name).then((doc) => {
-          vscode.window.showTextDocument(doc);
+    if (importStep) {
+      // Use step settings
+      let source = importStep.sourceUri;
+      if (source) {
+        vscode.workspace.fs.readFile(source).then((sourceText) => {
+          importStep!.document = sourceText.toString();
+          return this.importModelFromStep(context, importStep!);
         });
-      } catch (e) {
-        console.error("Failed to import code %s", e);
+      }
+    } else {
+      // Use open editor
+      const editor = vscode.window.activeTextEditor;
+      if (editor != null) {
+        try {
+          // TODO:  Only one converter so far - add optional converter selection
+          const document = editor.document;
+          const fileNameSegments = document.fileName.split(".")[0].split("/");
+          const name = fileNameSegments[fileNameSegments.length - 1];
+          // TODO: use file selector
+          const baseUmlUri: vscode.Uri = vscode.Uri.from({
+            scheme: "file",
+            path: context.asAbsolutePath("generated/uml"),
+          });
+          const fileUri = vscode.Uri.joinPath(baseUmlUri, name + ".uml.json");
+          importStep = new uml.ImportStep();
+          importStep.document = document.getText();
+          importStep.name = name;
+          importStep.destinationUri = fileUri;
+          this.importModelFromStep(context, importStep!)
+            .then((importStep) => {
+              return vscode.workspace.openTextDocument(fileUri);
+            })
+            .then((exportDocument) =>
+              vscode.window.showTextDocument(exportDocument)
+            );
+        } catch (e) {
+          console.error("Failed to import code %s", e);
+        }
       }
     }
     void vscode.window.showInformationMessage("File Converted Successfully!");
@@ -37,34 +66,40 @@ export class UmlConverter {
    * @param name name of document
    * @returns Thenable<TextDocument> converted document within a promise
    */
-  convertDocument(
+  importModelFromStep(
     context: vscode.ExtensionContext,
-    document: vscode.TextDocument,
-    name: string
-  ): Thenable<vscode.TextDocument> {
-    // TODO:  Only one converter so far - add optional converter selection
-    const converter: uml.Converter = new gliffy.UmlConverter();
-    const model: uml.ModelDefinition = converter.convert(
-      document.getText(),
-      name
-    );
-    // TODO: use file selector
-    const baseUmlUri: vscode.Uri = vscode.Uri.from({
-      scheme: "file",
-      path: context.asAbsolutePath("generated/uml"),
-    });
-    const fileUri = vscode.Uri.joinPath(baseUmlUri, name + ".json");
+    importStep: uml.ImportStep
+  ): Thenable<uml.ImportStep> {
+    const document = importStep.document;
+    assert(document);
+
+    const name: string = importStep.name;
+    assert(name);
+
+    const fileUri = importStep.destinationUri;
+    assert(fileUri);
+
+    // Default importer
+    var importer: uml.Importer = new gliffy.Importer();
+    switch (importStep.importerClassname) {
+      case "gliffy.Importer":
+        importer = new gliffy.Importer();
+        break;
+      case "drawio.Importer":
+        //TODO:  Add drawio importer
+        break;
+    }
+
+    const model: uml.ModelDefinition = importer.import(document, name);
+
     return vscode.workspace.fs
       .writeFile(fileUri, Buffer.from(JSON.stringify(model)))
       .then((file) => {
         return vscode.workspace.fs.stat(fileUri);
       })
-      .then((fileStat) => {
-        console.debug("Saved file to " + fileUri.path);
-        return vscode.workspace.openTextDocument(fileUri);
-      })
-      .then((document) => {
-        return document;
+      .then(() => {
+        importStep.model = model;
+        return importStep;
       });
   }
 
@@ -72,7 +107,7 @@ export class UmlConverter {
    * Generate working code from the UML Model for the open document
    * @param context
    */
-  generate(context: vscode.ExtensionContext): void {
+  export(context: vscode.ExtensionContext): void {
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
 
@@ -85,20 +120,20 @@ export class UmlConverter {
 
         model.classes.forEach((definition) => {
           // Create the job wrapper class
-          const job: uml.GenerationJob = new uml.GenerationJob();
+          const job: uml.ExportStep = new uml.ExportStep();
 
           job.definition = definition;
           job.templateName = "classTemplate";
           job.fileExtension = "java";
           job.path = "src/main/java";
           job.package = model.defaultPackage;
-          void this.generateCodeFromJob(context, job).then((result) =>
+          void this.exportFromJob(context, job).then((result) =>
             console.debug(result)
           );
         });
       } catch (e) {
         console.error("Failed to generate Java code %s", e);
-        void vscode.window.showErrorMessage("Failed to generate Java code");
+        void vscode.window.showErrorMessage("Failed to generate code");
       }
     } else {
       console.error("No editor open");
@@ -126,16 +161,18 @@ export class UmlConverter {
       try {
         // Get the current job document
         const document = editor.document;
-        const jobText: string = document.getText();
+        let jobText: string = document.getText();
+        jobText = this.resolveParameters(jobText);
         const job: uml.UmlJob = JSON.parse(jobText) as uml.UmlJob;
+
         console.info("Executing job: %s", job.name);
-        job.conversionJobs.forEach((conversionJob) => {
-          console.info("Converting with job %s", conversionJob.name);
-          this.convert(context);
+        job.importSteps.forEach((step) => {
+          console.info("Converting with job %s - %s", job.name, step.name);
+          this.import(context, step);
         });
       } catch (e) {
         console.error("Failed to run job %s", e);
-        void vscode.window.showErrorMessage("Failed to generate Java code");
+        void vscode.window.showErrorMessage("Failed to generate code");
       }
     } else {
       console.error("No editor open");
@@ -155,9 +192,9 @@ export class UmlConverter {
    * @param job
    * @returns
    */
-  generateCodeFromJob(
+  exportFromJob(
     context: vscode.ExtensionContext,
-    job: uml.GenerationJob
+    job: uml.ExportStep
   ): Thenable<string> {
     if (
       !(
@@ -183,7 +220,7 @@ export class UmlConverter {
       codePackage = definition.package;
     }
     definition.package = codePackage;
-    const generator: uml.Generator =
+    const generator: uml.Exporter =
       new handleBarsGenerator.HandlebarsCodeGenerator();
     return this.readTemplate(
       context,
@@ -192,7 +229,7 @@ export class UmlConverter {
       .then((template) => {
         // Generate the code using the job
         job.template = template;
-        return generator.generate(job);
+        return generator.export(job);
       })
       .then((code) => {
         // split the package
@@ -223,6 +260,25 @@ export class UmlConverter {
       });
   }
 
+  /**
+   *
+   * @param jobText the jobText to resolve parameters in
+   * @returns an updated job
+   */
+  resolveParameters(jobText: string): string {
+    let configuration = vscode.workspace.getConfiguration();
+    var resolvedText: string = jobText;
+    var matches: Iterable<RegExpMatchArray> | null =
+      jobText.matchAll(PARAMETER_PATTERN);
+    if (matches) {
+      for (const matchGroups of matches) {
+        let key = matchGroups[1];
+        let value: string = configuration.get(key) || "not-found";
+        resolvedText = resolvedText.replace(matchGroups[0], value);
+      }
+    }
+    return resolvedText;
+  }
   /**
    * Load a template based on the name
    * @param context the extension context - needed for the fileSystem

@@ -14,13 +14,12 @@ A VSCode extension to process UML diagrams into working code.
 
 * Plugable import classes
 * Template driven code generation using Handlebars library
- * Java
- * JavaScript
- * SQL
- * User configuratble output
+  * Java
+  * JavaScript
+  * SQL
+  * User configuratble output
 * Batch job configuration provides repeatable operations to multiple targets
-* VSCode commands
-
+* VSCode command driven
 
 ## Requirements
 
@@ -28,7 +27,6 @@ A VSCode extension to process UML diagrams into working code.
   * Gliffy UML Class Diagram (.gliffy)
   * Drawio UML Class Diagram (.drawio)
     * See [drawio](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio)
-
 
 ## Use
 * Gliffy
@@ -64,6 +62,9 @@ Pre-release
  - Gliffy conversion
  - Java Class generation
 
+## Contributions
+
+Code contributions and pull requests are welcomed based on the feature and bug list. Please follow normal github edicate. Contributors should have TypeScript experience and a basic understanding of VSCode extension development. See: ![VSCode Extension Development](https://code.visualstudio.com/api/get-started/your-first-extension)
 
 ---
 

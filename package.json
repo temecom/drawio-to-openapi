@@ -20,18 +20,49 @@
         "title": "uml-tools:Welcome"
       },
       {
-        "command": "uml-tools.convert",
-        "title": "uml-tools:Convert to UML-Json"
+        "command": "uml-tools.import",
+        "title": "uml-tools:Import UML to .uml.json"
       },
       {
-        "command": "uml-tools.generate",
-        "title": "uml-tools:Generate Code"
+        "command": "uml-tools.export",
+        "title": "uml-tools:Export to Code"
       },
       {
         "command": "uml-tools.execute",
         "title": "uml-tools:Execute Job"
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "UMLTools",
+      "properties": {
+        "uml.templateFolderUri": {
+          "type": "string",
+          "$comment": "The folder containing the handlebars templates",
+          "default": "file:///${workspaceFolder}/uml/template"
+        },
+        "uml.jobFolderUri": {
+          "type": "string",
+          "$comment": "The folder containing the conversion jobs",
+          "default": "file:///${workspaceFolder}/uml/job"
+        },
+        "uml.gliffyRootUri": {
+          "type": "string",
+          "$comment": "The URI to the Gliffy folder or site where UML docs are created (optional)",
+          "default": "file:///${workspaceFolder}/uml/in/gliffy"
+        },
+        "uml.targetProjectUri": {
+          "type": "string",
+          "$comment": "The file URI to the target project",
+          "default": "file:///${workspaceFolder}/uml/out/target"
+        },
+        "uml.workingFolderUri": {
+          "type": "string",
+          "$comment": "The file URI to the temp working folder",
+          "default": "file:///${workspaceFolder}/uml/tmp"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

@@ -1,8 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 
-import { randomUUID } from 'crypto';
-import * as uml from './umlEntities';
+import { randomUUID } from "crypto";
+import * as uml from "./umlEntities";
 
 /**
  * Constants
@@ -23,34 +23,37 @@ const GLIFFY_PARAMETER_PATTERN: RegExp = /([a-zA-Z0-9]*):([a-zA-Z0-9<>]*)/g;
  *
  */
 export class UmlGliffyItem {
-  id: string = '';
-  uid: string = '';
+  id: string = "";
+  uid: string = "";
   stereotype: uml.UmlStereotype = null as unknown as uml.UmlStereotype;
   texts: string[] = new Array<string>();
-  children: Map<uml.UmlElement, UmlGliffyItem[]> = new Map<uml.UmlElement, UmlGliffyItem[]>();
+  children: Map<uml.UmlElement, UmlGliffyItem[]> = new Map<
+    uml.UmlElement,
+    UmlGliffyItem[]
+  >();
   source: any;
 }
 
 /**
  * A class to convert a Gliffy UML Document in '.gliffy' json form to a neutral UMLDefinition set
  */
-export class UmlConverter implements uml.Converter {
+export class Importer implements uml.Importer {
   /**
    * Scan the Gliffy doucment for the uml model definitions
    * @param document Gliffy document in '.gliffy' json form
    * @returns converted model
    */
-  convert (document: string, name: string): uml.ModelDefinition {
+  import(document: string, name: string): uml.ModelDefinition {
     const model: uml.ModelDefinition = new uml.ModelDefinition();
     model.name = name;
     const jsonDocument = JSON.parse(document);
     Object.entries(jsonDocument).forEach((entry) => {
       console.debug(entry);
-      if (entry[0] === 'stage') {
+      if (entry[0] === "stage") {
         // Get the UML objects
         const stage: any = entry[1];
         const umlItems: any[] = stage.objects as any[];
-        console.debug('Found:');
+        console.debug("Found:");
         umlItems.forEach((item) => {
           let classDefinition: uml.ClassDefinition;
           let interfaceDefinition: uml.InterfaceDefinition;
@@ -93,7 +96,7 @@ export class UmlConverter implements uml.Converter {
    * @param item the json object to parse
    * @returns a partially instanciated
    */
-  parseGliffyItem (item: any): UmlGliffyItem {
+  parseGliffyItem(item: any): UmlGliffyItem {
     const umlGliffyItem: UmlGliffyItem = new UmlGliffyItem();
     umlGliffyItem.id = item.id;
     umlGliffyItem.stereotype = this.locateStereotype(item);
@@ -106,7 +109,7 @@ export class UmlConverter implements uml.Converter {
    * @param item the gliffy item
    * @returns the modified ClassDefinition
    */
-  createClass (umlGliffyItem: UmlGliffyItem): uml.ClassDefinition {
+  createClass(umlGliffyItem: UmlGliffyItem): uml.ClassDefinition {
     const classDefinition = new uml.ClassDefinition();
     const source: any = umlGliffyItem.source;
     const children: any[] = source.children;
@@ -126,7 +129,7 @@ export class UmlConverter implements uml.Converter {
    * @param item the Gliffy Iten
    * @returns the modified InterfaceDefinition
    */
-  createInterface (umlGliffyItem: UmlGliffyItem): uml.InterfaceDefinition {
+  createInterface(umlGliffyItem: UmlGliffyItem): uml.InterfaceDefinition {
     const interfaceDefinition = new uml.InterfaceDefinition();
     const source: any = umlGliffyItem.source;
     const children: any[] = source.children;
@@ -143,7 +146,7 @@ export class UmlConverter implements uml.Converter {
    * @param umlGliffyItem the Gliffy Item
    * @returns packageDefinition
    */
-  createPackage (umlGliffyItem: UmlGliffyItem): uml.PackageDefinition {
+  createPackage(umlGliffyItem: UmlGliffyItem): uml.PackageDefinition {
     const packageDefinition: uml.PackageDefinition =
       new uml.PackageDefinition();
     const source: any = umlGliffyItem.source;
@@ -159,7 +162,7 @@ export class UmlConverter implements uml.Converter {
    * @param item the Gliffy Item
    * @returns the stereotype the stereotype found or null
    */
-  locateStereotype (item: any): uml.UmlStereotype {
+  locateStereotype(item: any): uml.UmlStereotype {
     let stereotype: uml.UmlStereotype = null as unknown as uml.UmlStereotype;
     const uid: string = item.uid as string;
     if (uid != null) {
@@ -177,7 +180,7 @@ export class UmlConverter implements uml.Converter {
    * @param item the Gliffy Item
    * @returns an array of methods found - or empty array
    */
-  findMethods (item: any): uml.MethodDefinition[] {
+  findMethods(item: any): uml.MethodDefinition[] {
     const methods: uml.MethodDefinition[] = [];
     // Locate all of the methods under the class child
     const methodTexts: string[] = this.findTexts(item, GLIFFY_METHODS_PATTERN);
@@ -211,7 +214,7 @@ export class UmlConverter implements uml.Converter {
    * @param item the Gliffy Item
    * @returns an array of attributes or emtpy array
    */
-  findAttributes (item: any): uml.AttributeDefinition[] {
+  findAttributes(item: any): uml.AttributeDefinition[] {
     const attributes: uml.AttributeDefinition[] = [];
     // Get the attributes
     const attributeTexts: string[] = this.findTexts(
@@ -240,7 +243,7 @@ export class UmlConverter implements uml.Converter {
    *
    * @returns the name string or blank if not found
    */
-  findName (item: any): string {
+  findName(item: any): string {
     return this.findText(
       item.children[uml.UmlElement.NAME],
       GLIFFY_CLASS_NAME_PATTERN
@@ -254,8 +257,8 @@ export class UmlConverter implements uml.Converter {
    * @param childElement the child element to use @see: classes.UmlElement
    * @returns the first text or blank if not found
    */
-  findText (item: any, pattern: RegExp): string {
-    let text: string = '';
+  findText(item: any, pattern: RegExp): string {
+    let text: string = "";
     const texts: string[] = this.findTexts(item, pattern);
     if (texts.length > 0) {
       text = texts[texts.length - 1];
@@ -269,9 +272,9 @@ export class UmlConverter implements uml.Converter {
    * @param item the Gliffy item to use
    * @returns an array of texts located or an empty array
    */
-  findTexts (item: any, pattern: RegExp): string[] {
+  findTexts(item: any, pattern: RegExp): string[] {
     let texts: string[] = [];
-    let text = '';
+    let text = "";
     const children: any[] = item.children;
     children.forEach((child) => {
       if (child.children != null) {
@@ -280,7 +283,7 @@ export class UmlConverter implements uml.Converter {
       } else {
         const graphic = child.graphic;
         if (graphic != null) {
-          if (graphic.type === 'Text') {
+          if (graphic.type === "Text") {
             // Found the text = may be mutliple lines
             const html: string = graphic.Text.html;
             const matches: Iterable<RegExpMatchArray> | null =
